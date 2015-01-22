@@ -1,0 +1,13 @@
+# Site settings
+title: Findings
+email: sudeepy at gmail dot com
+description: > # this means to ignore newlines until "baseurl:"
+  A place to collect my thoughts. Mostly Swift code with a
+  couple mixins of other (mostly geeky) things.
+baseurl: "" # the subpath of your site, e.g. /blog/
+url: "http://sudeepy.com" # the base hostname & protocol for your site
+twitter_username: sudeep_y
+github_username:  sudeepy
+
+# Build settings
+markdown: kramdown
