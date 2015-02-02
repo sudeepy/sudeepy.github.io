@@ -1,5 +1,5 @@
 # Site settings
-title: Findings
+title: Blog.Name
 email: sudeepy at gmail dot com
 description: > # this means to ignore newlines until "baseurl:"
   A place to collect my thoughts. Mostly Swift code with a
