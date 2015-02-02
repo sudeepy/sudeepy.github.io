@@ -6,9 +6,37 @@ description: > # this means to ignore newlines until "baseurl:"
   couple mixins of other (mostly geeky) things.
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://sudeepy.com" # the base hostname & protocol for your site
-twitter_username: sudeep_y
+
+# Google analytics
+google_analytics:
+
+# Optional features
+animated:           false
+show_related_posts: false
+show_post_footers:  false
+
+# Disqus post comments
+# (leave blank to disable Disqus)
+disqus_shortname:
+
+# Social icons
+show_social_icons: false
 github_username:  sudeepy
+stackoverflow_id:
+twitter_username: sudeep_y
+google_plus_id:
 linkedin_username: sudeepy
+bitcoin_url:
+paypal_url:
+flattr_button:
 
 # Build settings
-markdown: kramdown
+markdown:     redcarpet
+redcarpet:
+  extensions: ['smart', 'tables', 'with_toc_data']
+permalink:    pretty
+paginate:     3
+sass:
+  compressed: true
+gems:
+  - jekyll-sitemap
