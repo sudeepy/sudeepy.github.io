@@ -7,7 +7,7 @@ permalink: /about/
 #### The Author
 I am a self-described "Software Imagineer." I love all things related to coding, product, and design. <a href="/contact/">Ping</a> me if you do too and want to talk shop.
 
-#### Blog.Name
+#### {{ site.title }}
 As of this writing, this will be a place for my thoughts on Apple's Swift,
 functional programming, product design, mobile, the tech industry, and whatever else I think sounds interesting.
 
