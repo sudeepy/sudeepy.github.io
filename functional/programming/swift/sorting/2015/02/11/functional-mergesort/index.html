@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Functional Merge Sort (in Swift) &#8211; Blog.Name</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm following functional patterns.">
+    <meta name="author" content="">
+    <meta name="keywords" content="functional, programming, swift, sorting">
+    <link rel="canonical" href="http://sudeepy.com/functional/programming/swift/sorting/2015/02/11/functional-mergesort/">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/pixyll.css" type="text/css">
+
+    <!-- Fonts -->
+    <link href='//fonts.googleapis.com/css?family=Merriweather:900,900italic,300,300italic' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Lato:900,300' rel='stylesheet' type='text/css'>
+    
+
+    <!-- Open Graph -->
+    <!-- From: https://github.com/mmistakes/hpstr-jekyll-theme/blob/master/_includes/head.html -->
+    <meta property="og:locale" content="en_US">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Functional Merge Sort (in Swift)">
+    <meta property="og:description" content="A place to collect my thoughts. Mostly Swift code with a couple mixins of other (mostly geeky) things.
+">
+    <meta property="og:url" content="http://sudeepy.com/functional/programming/swift/sorting/2015/02/11/functional-mergesort/">
+    <meta property="og:site_name" content="Blog.Name">
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="favicon-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="favicon-160x160.png" sizes="160x160">
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
+</head>
+
+<body class="">
+  <div class="site-wrap">
+    <header class="site-header px2 px-responsive">
+  <div class="mt2 wrap">
+    <div class="measure">
+      <a href="/" class="site-title">Blog.Name</a>
+      <nav class="site-nav right">
+        <a href="/about/">About</a>
+<a href="/contact/">Contact</a>
+
+      </nav>
+      <div class="clearfix"></div>
+      
+    </div>
+  </div>
+</header>
+
+
+    <div class="post p2 p-responsive wrap" role="main">
+      <div class="measure">
+        
+
+
+<div class="post-header mb2">
+  <h1>Functional Merge Sort (in Swift)</h1>
+  <span class="post-meta">Feb 11, 2015</span><br>
+  
+  <span class="post-meta small">11 minute read</span>
+</div>
+
+<article class="post-content">
+  <p>Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm following functional patterns. It was a pretty fun experiment, and I&rsquo;ve documented it below.</p>
+
+<p>But before we go through this, I&rsquo;d like to clarify what I mean by &ldquo;functional.&rdquo; Functional programming is a loaded term at this stage and encompasses <a href="http://www.slideshare.net/ScottWlaschin/fp-patterns-buildstufflt">many many concepts</a>. The key aspects that I was concerned with for this experiment were no side effects, immutability, and reusable/composable functions.</p>
+
+<p>With that, let&rsquo;s get started.</p>
+
+<p>Below is the basic, imperative implementation of merge sort. It takes in an array of <code class="highlight language-swift" data-lang="swift"><span class="n">Comparable</span></code> items and returns them in ascending order:</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">func</span> <span class="n">merge</span><span class="o">&lt;</span><span class="nl">T</span> <span class="p">:</span> <span class="n">Comparable</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">b</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">var</span> <span class="n">indexA</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">var</span> <span class="n">indexB</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">var</span> <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">T</span><span class="p">]()</span>
+    <span class="k">while</span> <span class="n">indexA</span> <span class="o">&lt;</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">&amp;&amp;</span> <span class="n">indexB</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">.</span><span class="n">count</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="n">indexA</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">[</span><span class="n">indexB</span><span class="p">]</span> <span class="p">{</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="n">indexA</span><span class="p">]]</span>
+            <span class="n">indexA</span><span class="o">++</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="n">indexB</span><span class="p">]]</span>
+            <span class="n">indexB</span><span class="o">++</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">indexA</span><span class="p">..</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">])</span> <span class="o">+</span> <span class="n">Array</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="n">indexB</span><span class="p">..</span><span class="o">&lt;</span><span class="n">b</span><span class="p">.</span><span class="n">count</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">c</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">mergeSort</span><span class="o">&lt;</span><span class="nl">T</span> <span class="p">:</span> <span class="n">Comparable</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="p">}</span>
+
+    <span class="k">let</span> <span class="n">middle</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">let</span> <span class="kr">left</span> <span class="o">=</span> <span class="n">mergeSort</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mf">0.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">middle</span><span class="p">]))</span>
+    <span class="k">let</span> <span class="kr">right</span> <span class="o">=</span> <span class="n">mergeSort</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">middle</span><span class="p">..</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">merge</span><span class="p">(</span><span class="kr">left</span><span class="p">,</span> <span class="kr">right</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div>
+
+<p>Looking at the <code class="highlight language-swift" data-lang="swift"><span class="n">mergeSort</span></code> function, it is already fairly functional. It only uses immutable types and has no side effects. Let&rsquo;s instead focus on the <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function.</p>
+
+<p>To refactor the <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function, let&rsquo;s first recognize what it is doing: it takes two arrays and interleaves them based on sort order. This can be expressed recursively as &ldquo;takes arrays <code class="highlight language-swift" data-lang="swift"><span class="n">A</span></code> and <code class="highlight language-swift" data-lang="swift"><span class="n">B</span></code>, picks either <code class="highlight language-swift" data-lang="swift"><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> or <code class="highlight language-swift" data-lang="swift"><span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> based on sort order, and prepends it to the interleaving of the remainder of <code class="highlight language-swift" data-lang="swift"><span class="n">A</span></code> and <code class="highlight language-swift" data-lang="swift"><span class="n">B</span></code>.&rdquo; Here&rsquo;s the refactored <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function:</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">func</span> <span class="n">merge</span><span class="o">&lt;</span><span class="nl">T</span> <span class="p">:</span> <span class="n">Comparable</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">b</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">b</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">b</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Array</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">b</span><span class="p">.</span><span class="n">count</span><span class="p">]))</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<p>With this new <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function, we now have eliminated all mutable variables and have something with a more declarative implementation. With this, our merge sort has purely immutable types.</p>
+
+<p>(Note: this post isn&rsquo;t concerned with performance; the above implementation is certainly susceptible to stack overflows. This might be a topic for a future post.)</p>
+
+<p>The next issue to tackle is our merge sort&rsquo;s reusability. Right now, if you want to sort something in ascending order, it works great, but if you want descending, you&rsquo;re out of luck. What we need to do is extract the comparison into a block that can be passed in. This way our merge sort is not tied to a particular sort order.</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">func</span> <span class="n">merge</span><span class="o">&lt;</span><span class="nl">T</span> <span class="p">:</span> <span class="n">Comparable</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">b</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">eval</span><span class="p">:</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">b</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">eval</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">b</span><span class="p">,</span> <span class="n">eval</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Array</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">b</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">eval</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">mergeSort</span><span class="o">&lt;</span><span class="nl">T</span> <span class="p">:</span> <span class="n">Comparable</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">eval</span><span class="p">:</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="p">}</span>
+
+    <span class="k">let</span> <span class="n">middle</span> <span class="o">=</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">let</span> <span class="kr">left</span> <span class="o">=</span> <span class="n">mergeSort</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mf">0.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">middle</span><span class="p">]),</span> <span class="n">eval</span><span class="p">)</span>
+    <span class="k">let</span> <span class="kr">right</span> <span class="o">=</span> <span class="n">mergeSort</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">middle</span><span class="p">..</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">eval</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merge</span><span class="p">(</span><span class="kr">left</span><span class="p">,</span> <span class="kr">right</span><span class="p">,</span> <span class="n">eval</span><span class="p">)</span>
+<span class="p">}</span></code></pre></div>
+
+<p>Now that the comparison has been abstracted, we can make another tweak: we can drop the <code class="highlight language-swift" data-lang="swift"><span class="n">Comparable</span></code> requirement on <code class="highlight language-swift" data-lang="swift"><span class="n">T</span></code>. Now we can sort any arbitary array of items. This makes our merge sort even more reusable.</p>
+
+<p>One aspect of functional programming I really enjoy is its emphasis on expressive syntax. Each line of code is meant to be self-contained and declarative, which should make the code more readable. One important aspect of expressive syntax is the careful use of types. This subject alone is worthy of another post, as <a href="https://swiftcast.tv/articles/the-design-of-types">others have done</a>.</p>
+
+<p>In our case, the issue is with the return type of the <code class="highlight language-swift" data-lang="swift"><span class="n">eval</span></code> block. If you look at our <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function, we call <code class="highlight language-swift" data-lang="swift"><span class="n">eval</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></code>. If it returns <code class="highlight language-swift" data-lang="swift"><span class="nb">true</span></code>, we pick <code class="highlight language-swift" data-lang="swift"><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> as the first element, and if it returns <code class="highlight language-swift" data-lang="swift"><span class="nb">false</span></code>, we pick <code class="highlight language-swift" data-lang="swift"><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code>. This seems arbitrary. Why can&rsquo;t it be the other way around? And also, what guarantees the caller who defined <code class="highlight language-swift" data-lang="swift"><span class="n">eval</span></code> followed this contract? The problem is that we&rsquo;re using documentation to express a requirement instead of using the compiler to enforce it.</p>
+
+<p>Instead, we&rsquo;ll introduce a new type called <code class="highlight language-swift" data-lang="swift"><span class="n">Choice</span></code>. All <code class="highlight language-swift" data-lang="swift"><span class="n">Choice</span></code> does is describe a choice between one or the other, a or b, left or right:</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">enum</span> <span class="n">Choice</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">Left</span>
+    <span class="k">case</span> <span class="n">Right</span>
+<span class="p">}</span></code></pre></div>
+
+<p>Now, we&rsquo;ll just make <code class="highlight language-swift" data-lang="swift"><span class="n">eval</span></code> return a <code class="highlight language-swift" data-lang="swift"><span class="n">Choice</span></code> rather than a <code class="highlight language-swift" data-lang="swift"><span class="n">Bool</span></code> and update our <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function accordingly:</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">func</span> <span class="n">merge</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nl">a</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">b</span><span class="p">:</span> <span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="nl">eval</span><span class="p">:</span> <span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Choice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">a</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">b</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">b</span><span class="p">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="p">}</span>
+
+    <span class="k">switch</span> <span class="n">eval</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="p">.</span><span class="nl">Left</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">Array</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">b</span><span class="p">,</span> <span class="n">eval</span><span class="p">)</span>
+
+    <span class="k">case</span> <span class="p">.</span><span class="nl">Right</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Array</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mf">1.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">b</span><span class="p">.</span><span class="n">count</span><span class="p">]),</span> <span class="n">eval</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<p>By introducing a new type, there is a much stronger connection between <code class="highlight language-swift" data-lang="swift"><span class="n">eval</span></code>&rsquo;s return type and <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code>&rsquo;s logic flow. In addition, the return type&rsquo;s meaning is much clearer to callers.</p>
+
+<p>With that, we have made both our functions very functional. They have no side effects, use immutable types, and are reusable. In fact, the <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function is reusable even outside the context of merge sort. If you look at it again, all it&rsquo;s doing is taking two arrays and interleaving their contents based off of some external criteria. For example, outside of merge sort, another conceivable use case would be to simulate a <a href="http://en.wikipedia.org/wiki/Shuffling#Riffle">riffle shuffle</a> for a deck of cards.</p>
+
+<p>Here is a sample implementation of a riffle shuffle using our <code class="highlight language-swift" data-lang="swift"><span class="n">merge</span></code> function:</p>
+
+<div class="highlight"><pre><code class="language-swift" data-lang="swift"><span class="k">struct</span> <span class="n">Card</span> <span class="p">{</span>
+    <span class="k">enum</span> <span class="n">Suit</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="n">Heart</span>
+        <span class="k">case</span> <span class="n">Diamond</span>
+        <span class="k">case</span> <span class="n">Club</span>
+        <span class="k">case</span> <span class="n">Spade</span>
+    <span class="p">}</span>
+
+    <span class="k">enum</span> <span class="n">Value</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="n">Two</span>
+        <span class="k">case</span> <span class="n">Three</span>
+        <span class="k">case</span> <span class="n">Four</span>
+        <span class="k">case</span> <span class="n">Ace</span>
+    <span class="p">}</span>
+
+    <span class="k">let</span> <span class="nl">value</span><span class="p">:</span> <span class="n">Value</span>
+    <span class="k">let</span> <span class="nl">suit</span><span class="p">:</span> <span class="n">Suit</span>
+<span class="p">}</span>
+
+<span class="c1">// Note: There is nothing in this that is specific to Card and</span>
+<span class="c1">//       could be made generic</span>
+<span class="k">func</span> <span class="n">riffleShuffle</span><span class="p">(</span><span class="nl">cards</span><span class="p">:</span> <span class="p">[</span><span class="n">Card</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="n">Card</span><span class="p">]</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="n">middle</span> <span class="o">=</span> <span class="n">cards</span><span class="p">.</span><span class="n">count</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">let</span> <span class="kr">left</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">cards</span><span class="p">[</span><span class="mf">0.</span><span class="p">.</span><span class="o">&lt;</span><span class="n">middle</span><span class="p">])</span>
+    <span class="k">let</span> <span class="kr">right</span> <span class="o">=</span> <span class="n">Array</span><span class="p">(</span><span class="n">cards</span><span class="p">[</span><span class="n">middle</span><span class="p">..</span><span class="o">&lt;</span><span class="n">cards</span><span class="p">.</span><span class="n">count</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">merge</span><span class="p">(</span><span class="kr">left</span><span class="p">,</span> <span class="kr">right</span><span class="p">)</span> <span class="p">{</span> <span class="n">_</span> <span class="k">in</span>
+        <span class="k">return</span> <span class="n">arc4random_uniform</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="p">.</span><span class="nl">Left</span> <span class="p">:</span> <span class="p">.</span><span class="n">Right</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></div>
+
+<p>With the advent of Scala and Swift in front-end development, functional programming concepts are becoming more and more popular. I encourage you to try revisiting these sorts of tried-and-true imperative implementations and rethinking them with a more functional style.</p>
+
+</article>
+
+
+
+
+
+
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+  <div class="p2 wrap">
+    <div class="measure mt1 center">
+      <small>
+        © 2015 Sudeep Yegnashankaran &middot; <a href="http://jekyllrb.com/">Jekyll</a> theme courtesy of <a href="https://github.com/johnotander/pixyll">Pixyll</a>.
+      </small>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-59308224-1', 'auto');
+ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>
