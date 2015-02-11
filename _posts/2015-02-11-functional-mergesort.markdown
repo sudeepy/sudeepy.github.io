@@ -2,7 +2,7 @@
 layout: post
 title:  "Functional Merge Sort (in Swift)"
 date:   2015-02-11 09:17:00
-summary:    Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm in as much of a functional way as I could.
+summary:    Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm following functional patterns.
 categories: functional programming swift sorting
 ---
 Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm following functional patterns. It was a pretty fun experiment, and I've documented it below.
@@ -45,7 +45,7 @@ func mergeSort<T : Comparable>(a: [T]) -> [T] {
 
 Looking at the {% ihighlight swift %}mergeSort{% endihighlight %} function, it is already fairly functional. It only uses immutable types and has no side effects. Let's instead focus on the {% ihighlight swift %}merge{% endihighlight %} function.
 
-To refactor the {% ihighlight swift %}merge{% endihighlight %} function, let's first recognize what it is doing: it takes two arrays and interleaves them based on sort order. This can be expressed recursively as "takes arrays A and B, picks either A[0] or B[0] based on sort order, and prepends to the interleaving of the remainder of A and B." Here's the refactored {% ihighlight swift %}merge{% endihighlight %} function:
+To refactor the {% ihighlight swift %}merge{% endihighlight %} function, let's first recognize what it is doing: it takes two arrays and interleaves them based on sort order. This can be expressed recursively as "takes arrays {% ihighlight swift %}A{% endihighlight %} and {% ihighlight swift %}B{% endihighlight %}, picks either {% ihighlight swift %}A[0]{% endihighlight %} or {% ihighlight swift %}B[0]{% endihighlight %} based on sort order, and prepends it to the interleaving of the remainder of {% ihighlight swift %}A{% endihighlight %} and {% ihighlight swift %}B{% endihighlight %}." Here's the refactored {% ihighlight swift %}merge{% endihighlight %} function:
 
 {% highlight swift %}
 func merge<T : Comparable>(a: [T], b: [T]) -> [T] {
@@ -98,11 +98,11 @@ func mergeSort<T : Comparable>(a: [T], eval: (T, T) -> Bool) -> [T] {
 }
 {% endhighlight %}
 
-Now that the comparison has been abstracted, we can make another tweak: we can drop the {% ihighlight swift %}Comparable{% endihighlight %} requirement on T. Now we can sort any arbitary array of items. This makes our merge sort even more reusable.
+Now that the comparison has been abstracted, we can make another tweak: we can drop the {% ihighlight swift %}Comparable{% endihighlight %} requirement on {% ihighlight swift %}T{% endihighlight %}. Now we can sort any arbitary array of items. This makes our merge sort even more reusable.
 
 One aspect of functional programming I really enjoy is its emphasis on expressive syntax. Each line of code is meant to be self-contained and declarative, which should make the code more readable. One important aspect of expressive syntax is the careful use of types. This subject alone is worthy of another post, as [others have done](https://swiftcast.tv/articles/the-design-of-types).
 
-In our case, the issue is with the return type of the {% ihighlight swift %}eval{% endihighlight %} block. If you look at our {% ihighlight swift %}merge{% endihighlight %} function, we call {% ihighlight swift %}eval(a[0], b[0]){% endihighlight %}. If it returns true, we pick {% ihighlight swift %}a[0]{% endihighlight %} as the first element, and if it returns false, we pick {% ihighlight swift %}b[0]{% endihighlight %}. This seems arbitrary. Why can't it be the other way around? And also, what guarantees the caller who defined {% ihighlight swift %}eval{% endihighlight %} followed this contract? The problem is that we're using documentation to express a requirement instead of using the compiler to enforce it.
+In our case, the issue is with the return type of the {% ihighlight swift %}eval{% endihighlight %} block. If you look at our {% ihighlight swift %}merge{% endihighlight %} function, we call {% ihighlight swift %}eval(a[0], b[0]){% endihighlight %}. If it returns {% ihighlight swift %}true{% endihighlight %}, we pick {% ihighlight swift %}a[0]{% endihighlight %} as the first element, and if it returns {% ihighlight swift %}false{% endihighlight %}, we pick {% ihighlight swift %}b[0]{% endihighlight %}. This seems arbitrary. Why can't it be the other way around? And also, what guarantees the caller who defined {% ihighlight swift %}eval{% endihighlight %} followed this contract? The problem is that we're using documentation to express a requirement instead of using the compiler to enforce it.
 
 Instead, we'll introduce a new type called {% ihighlight swift %}Choice{% endihighlight %}. All {% ihighlight swift %}Choice{% endihighlight %} does is describe a choice between one or the other, a or b, left or right:
 
@@ -160,6 +160,8 @@ struct Card {
     let suit: Suit
 }
 
+// Note: There is nothing in this that is specific to Card and
+//       could be made generic
 func riffleShuffle(cards: [Card]) -> [Card] {
     let middle = cards.count / 2
     let left = Array(cards[0..<middle])
