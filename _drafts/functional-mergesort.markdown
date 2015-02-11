@@ -7,7 +7,7 @@ categories: functional programming swift sorting
 ---
 Over the past several months, I have been learning a lot about Swift and functional programming. As an exercise for myself, I tried implementing the classic merge sort algorithm in as much of a functional way as I could. Below you will find how my implementation progressed.
 
-But before we go through this, I'd like to clarify what I mean by "functional." Functional programming is a loaded term at this stage and encompasses many many concepts*. The key aspects that I'm concerned with are 1) no side effects*, 2) immutability*, and 3) reusable/composable functions*.
+But before we go through this, I'd like to clarify what I mean by "functional." Functional programming is a loaded term at this stage and encompasses [many many concepts](http://www.slideshare.net/ScottWlaschin/fp-patterns-buildstufflt). The key aspects that I'm concerned with are no side effects, immutability, and reusable/composable functions.
 
 With that, let's get started.
 
@@ -100,7 +100,7 @@ func mergeSort<T : Comparable>(a: [T], eval: (T, T) -> Bool) -> [T] {
 
 Now that the comparison has been abstracted, we can make another tweak: we can drop the Comparable requirement on T. Now we can sort any arbitary array of items. This makes our merge sort even more reusable.
 
-One aspect of functional programming I really enjoy is its emphasis on expressive syntax. Each line of code is meant to be self-contained and declarative, which should make the code more readable. One important aspect of expressive syntax is the careful use of types. This subject alone is worthy of another post, as others have done*.
+One aspect of functional programming I really enjoy is its emphasis on expressive syntax. Each line of code is meant to be self-contained and declarative, which should make the code more readable. One important aspect of expressive syntax is the careful use of types. This subject alone is worthy of another post, as [others have done](https://swiftcast.tv/articles/the-design-of-types).
 
 In our case, the issue is with the return type of the eval block. If you look at our merge function, we call eval(a[0], b[0]). If it returns true, we pick a[0] as the first element, and if it returns false, we pick b[0]. This seems arbitrary. Why can't it be the other way around? And also, what guarantees the caller who defined eval followed this contract? The problem is that we're using documentation to express a requirement instead of using the compiler to enforce it.
 
@@ -136,7 +136,7 @@ func merge<T>(a: [T], b: [T], eval: (T, T) -> Choice) -> [T] {
 
 By introducing a new type, there is a much stronger connection between eval's return type and merge's logic flow. In addition, the return type's meaning is much clearer to callers.
 
-With that, we have made both our functions very functional. They have no side effects, use immutable types, and are reusable. In fact, the merge function is reusable even outside the context of merge sort. If you look at it again, all it's doing is taking two arrays and interleaving their contents based off of some external criteria. For example, outside of merge sort, another conceivable use case would be to simulate a riffle shuffle* for a deck of cards.
+With that, we have made both our functions very functional. They have no side effects, use immutable types, and are reusable. In fact, the merge function is reusable even outside the context of merge sort. If you look at it again, all it's doing is taking two arrays and interleaving their contents based off of some external criteria. For example, outside of merge sort, another conceivable use case would be to simulate a [riffle shuffle](http://en.wikipedia.org/wiki/Shuffling#Riffle) for a deck of cards.
 
 Here is a sample implementation of a riffle shuffle using our merge function:
 
